@@ -1,0 +1,6 @@
+.env
+/__pycache__
+drop_ues.png
+drop_ues.py
+test.py
+telebot.py
