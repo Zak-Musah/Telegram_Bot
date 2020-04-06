@@ -1,5 +1,6 @@
 .env
 /__pycache__
+/.vscode
 drop_ues.png
 drop_ues.py
 test.py
