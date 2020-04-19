@@ -4,7 +4,7 @@ import json
 import os
 from os.path import join, dirname
 from dotenv import load_dotenv
-
+import datetime
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 GRAPHQL_TOKEN = os.environ.get("GRAPHQL_TOKEN")
@@ -16,7 +16,7 @@ headers = {"Authorization": "Bearer {}".format(graphql_token),
            "Content-type": "application/json"}
 
 
-# A simple function to use requests.post to make the API call
+# A simple function make requests to the API
 
 
 def run_query(query):
@@ -75,21 +75,57 @@ def get_workers():
   }
 }"""
     result = run_query(query)
-    print(result)
+    return result
 
-    def availability_str(elapsed):
-        if elapsed < 0:
-            return "offline"
-        if elapsed < 10:  # comment
-            return "online"
-        return "offline for %s" % elapsed
+
+result = get_workers()
+
+intervals = (
+    ('weeks', 604800),  # 60 * 60 * 24 * 7
+    ('days', 86400),    # 60 * 60 * 24
+    ('hours', 3600),    # 60 * 60
+    ('minutes', 60),
+    ('seconds', 1),
+)
+
+
+def display_time(seconds, granularity=2):
+    result = []
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            if value == 1:
+                name = name.rstrip('s')
+            result.append("{} {}".format(value, name))
+    return ', '.join(result[:granularity])
+
+
+def availability_str(elapsed):
+    elapsed
+    if elapsed < 0:
+        return "offline"
+    if elapsed < 10:
+        return "online"
+    else:
+        return "offline %s" % elapsed
+
+
+time = 0
+
+
+def worker_status():
     workers = ''
     for worker in result["data"]["workers"]:
-        availability = worker["lastActiveElapsed"]
-        service_id = worker["service"]['id']
-        worker_id = worker["user"]['id']
-        workers += '\nThe Service {0} has {1} worker(s): \n'.format(
-            service_id, len(worker['user']))
-        workers += 'Worker {0} is {1} \n'.format(
-            worker_id, availability_str(availability))
+        try:
+            availability = worker["lastActiveElapsed"]
+            service_id = worker["service"]['id']
+            worker_id = worker["user"]['id']
+            available = display_time(availability)
+            workers += '\nThe Service {0} has {1} worker(s): \n'.format(
+                service_id, len(worker['user']))
+            workers += 'Worker {0} is {1} - for the past {2} \n'.format(
+                worker_id, availability_str(availability), available)
+        except Exception as err:
+            print(err)
     return workers
